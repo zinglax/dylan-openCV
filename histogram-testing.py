@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-img = cv2.imread('ovechkin-skillscomp.jpg')
+img = cv2.imread('./images/ovechkin-skillscomp.jpg')
 h = np.zeros((300,256,3))
 
 bins = np.arange(256).reshape(256,1)
