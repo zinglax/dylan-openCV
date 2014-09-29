@@ -36,7 +36,7 @@ def find_squares(img):
     return squares
 
 
-img = cv2.imread('./images/planner.jpg')
+img = cv2.imread('./images/checkerboard.jpg')
 
 
 squares = find_squares(img)
