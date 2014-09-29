@@ -8,33 +8,61 @@ from random import randint
 #img = cv2.imread('../images/ovechkin-skillscomp.jpg')
 #img = cv2.imread('../images/skyscrapers.jpg')
 img = cv2.imread('../images/checkerboard.jpg')
+#img = cv2.imread('../images/squareb.jpg')
+#img = cv2.imread('../images/squarew.jpg')
 
 # Kernel matrixes
 #---------------------------------------------------
-bottom_r =  [[-1,-1,-1,-1,-1],
-            [-1,-2,-2,-2,-2],
-            [-1,-2,0,0,0],
-            [-1,-2,0,2,2],
-            [-1,-2,0,2,1]]
+#bottom_r =  [[-1,-1,-1,-1,-1],
+            #[-1,-2,-2,-2,-2],
+            #[-1,-2,0,0,0],
+            #[-1,-2,0,2,2],
+            #[-1,-2,0,2,1]]
 
-bottom_l =  [[-1,-1,-1,-1,-1],
-            [-2,-2,-2,-2,-1],
-            [0,0,0,-2,-1],
-            [2,2,0,-2,-1],
-            [1,2,0,-2,-1],]
+#bottom_l =  [[-1,-1,-1,-1,-1],
+            #[-2,-2,-2,-2,-1],
+            #[0,0,0,-2,-1],
+            #[2,2,0,-2,-1],
+            #[1,2,0,-2,-1],]
 
-top_r =     [[-1,-2,0,2,1],
-            [-1,-2,0,2,2],
-            [-1,-2,0,0,0],
-            [-1,-2,-2,-2,-2],
-            [-1,-1,-1,-1,-1]]
+#top_r =     [[-1,-2,0,2,1],
+            #[-1,-2,0,2,2],
+            #[-1,-2,0,0,0],
+            #[-1,-2,-2,-2,-2],
+            #[-1,-1,-1,-1,-1]]
 
-top_l =     [[1,2,0,-2,-1],
-            [2,2,0,-2,-1],
-            [0,0,0,-2,-1],
-            [-2,-2,-2,-2,-1],
-            [-1,-1,-1,-1,-1]]
+#top_l =     [[1,2,0,-2,-1],
+            #[2,2,0,-2,-1],
+            #[0,0,0,-2,-1],
+            #[-2,-2,-2,-2,-1],
+            #[-1,-1,-1,-1,-1]]
 
+
+ 
+top_l =  [[0,0,-3,-1,0],
+            [0,-1,-6,-1,-1],
+            [-3,-6,0,0,0],
+            [-1,-1,0,1,1],
+            [0,-1,0,1,0]]
+
+ 
+top_r =  [[0,-1,-3,0,0],
+            [-1,-1,-6,-1,0],
+            [0,0,0,-6,-3],
+            [1,1,0,-1,-1],
+            [0,1,0,-1,0],]
+
+bottom_l =     [[0,-1,0,1,0],
+            [-1,-1,0,1,1],
+            [-3,-6,0,0,0],
+            [0,-1,-6,-1,-1],
+            [0,0,-3,-1,0]]
+
+bottom_r =     [[0,1,0,-1,0],
+            [1,1,0,-1,-1],
+            [0,0,0,-6,-3],
+            [-1,-1,-6,-1,0],
+            [0,-1,-3,0,0]]
 
 
 #---------------------------------------------------
@@ -118,10 +146,44 @@ def blur(image, scale, times):
     return image
 
 
+
+
+def get_whites(img):
+    
+    whites = []
+    
+    height, width = img.shape[:2]
+    for x in range(width-1):
+        for y in range(height-1):
+            print "x: "+ str(x) +" y: "+ str(y) + " value: " + str(img[x,y])
+            if str(img[y,x]) == '[255 255 255]':
+                whites.append([y,x])
+
+    return whites
+
 # Rectangle finder
-image = salt_n_pepper(img,0)
-image = blur(image, 1, 1)
-image = rectangles(image)
+#image = salt_n_pepper(img,.5)
+#image = blur(image, 1, 1)
+#image = rectangles(img)
+
+image = corner(img, 1, t_l)
+
+#whites = get_whites(image)
+#for i in whites:
+    #print i
+
+#print np.all(image == '[255 255 255]',-1)
+
+ret,image = cv2.threshold(image,127,255,cv2.THRESH_BINARY)
+
+nums = []
+for row,i in enumerate(image):
+    for col,j in enumerate(i):
+        if j[0] > 150 and j[1] > 150 and j[2] > 150:
+            nums.append([row,col])
+    
+print nums
+
 
 
 # Display
