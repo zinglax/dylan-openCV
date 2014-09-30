@@ -7,9 +7,9 @@ from random import randint
 #img = cv2.imread('../images/rectangles2.jpg')
 #img = cv2.imread('../images/ovechkin-skillscomp.jpg')
 #img = cv2.imread('../images/skyscrapers.jpg')
-img = cv2.imread('../images/checkerboard.jpg')
+#img = cv2.imread('../images/checkerboard.jpg')
 #img = cv2.imread('../images/squareb.jpg')
-#img = cv2.imread('../images/squarew.jpg')
+img = cv2.imread('../images/squarew.jpg')
 
 # Kernel matrixes
 #---------------------------------------------------
@@ -150,41 +150,87 @@ def blur(image, scale, times):
 
 def get_whites(img):
     
-    whites = []
-    
-    height, width = img.shape[:2]
-    for x in range(width-1):
-        for y in range(height-1):
-            print "x: "+ str(x) +" y: "+ str(y) + " value: " + str(img[x,y])
-            if str(img[y,x]) == '[255 255 255]':
-                whites.append([y,x])
+    nums = []
+    for row,i in enumerate(img):
+        for col,j in enumerate(i):
+            if j[0] > 150 and j[1] > 150 and j[2] > 150:
+                nums.append([row,col])
+        
+    return nums
 
-    return whites
+def threshold_image(img):
+    ret,img = cv2.threshold(img,127,255,cv2.THRESH_BINARY)
+    return img
+
+def corners(image):
+    '''Returns a dictionary of possible 4 corners of a rectangle'''
+    corners = {}
+    image1 = corner(img, 1, b_l)
+    corners['bottom_left'] = get_whites(threshold_image(image1))
+    image2 = corner(img, 1, b_r)
+    corners['bottom_right'] = get_whites(threshold_image(image2))
+    image3 = corner(img, 1, t_l)
+    corners['top_left'] = get_whites(threshold_image(image3))
+    image4 = corner(img, 1, t_r)    
+    corners['top_right'] = get_whites(threshold_image(image4))
+    
+    return corners
+
+
+
 
 # Rectangle finder
-#image = salt_n_pepper(img,.5)
-#image = blur(image, 1, 1)
+#image = salt_n_pepper(img,.1)
+#image = blur(image, 2, 1)
+
 #image = rectangles(img)
 
-image = corner(img, 1, t_l)
 
-#whites = get_whites(image)
-#for i in whites:
-    #print i
+c = corners(img)
+image = img
+print c
 
-#print np.all(image == '[255 255 255]',-1)
+print c['top_left'][0:3]
+print c['bottom_left'][0:3]
+print c['top_right'][0:3]
+print c['bottom_right'][0:3]
 
-ret,image = cv2.threshold(image,127,255,cv2.THRESH_BINARY)
 
-nums = []
-for row,i in enumerate(image):
-    for col,j in enumerate(i):
-        if j[0] > 150 and j[1] > 150 and j[2] > 150:
-            nums.append([row,col])
+rects = {}
+for tl in c['top_left']:
     
-print nums
+    # Possible Bottom Lefts
+    poss_bl = []
+    for bl in c['bottom_left']:
+        
+        # if the bottom left col value is +- 3 away from top left
+        if bl[1] < tl[1]+3 and bl[1] > tl[1]-3:
+            poss_bl.append(bl)
+            
+    
+    # Finding all of the possible bottom lefts for this rectangle
+    # TODO
+    # Need to find minimum row value and then add trim all the ones that are not +-3 from this value
+    # This basically gets all of the possible bottom lefts directly below this top left
+    #
+    # Next Do this with the top Rights in the same fashion 
+    # Finally From all of your top rights and bottom lefts find your bottom rights
+    # 
+    # Might want to create a function that finds all of the possible points above, below, left, or right of a given point
+    #
+    # Once you have all of the possible points for this rectangle, draw them...
+    
+    
+    rects[tuple(tl)] = {'poss_bl':poss_bl}
+    
+    
+    
+    
+    # Possible Top Rights
 
 
+    
+print rects
 
 # Display
 cv2.imshow("blurp", image)
