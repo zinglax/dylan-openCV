@@ -2,43 +2,9 @@ import cv2
 import numpy as np
 from random import randint
 
-# images
-#img = cv2.imread('../images/rectangles.jpg')
-#img = cv2.imread('../images/rectangles2.jpg')
-#img = cv2.imread('../images/ovechkin-skillscomp.jpg')
-#img = cv2.imread('../images/skyscrapers.jpg')
-#img = cv2.imread('../images/checkerboard.jpg')
-#img = cv2.imread('../images/squareb.jpg')
-img = cv2.imread('../images/squarew.jpg')
 
 # Kernel matrixes
 #---------------------------------------------------
-#bottom_r =  [[-1,-1,-1,-1,-1],
-            #[-1,-2,-2,-2,-2],
-            #[-1,-2,0,0,0],
-            #[-1,-2,0,2,2],
-            #[-1,-2,0,2,1]]
-
-#bottom_l =  [[-1,-1,-1,-1,-1],
-            #[-2,-2,-2,-2,-1],
-            #[0,0,0,-2,-1],
-            #[2,2,0,-2,-1],
-            #[1,2,0,-2,-1],]
-
-#top_r =     [[-1,-2,0,2,1],
-            #[-1,-2,0,2,2],
-            #[-1,-2,0,0,0],
-            #[-1,-2,-2,-2,-2],
-            #[-1,-1,-1,-1,-1]]
-
-#top_l =     [[1,2,0,-2,-1],
-            #[2,2,0,-2,-1],
-            #[0,0,0,-2,-1],
-            #[-2,-2,-2,-2,-1],
-            #[-1,-1,-1,-1,-1]]
-
-
- 
 top_l =  [[0,0,-3,-1,0],
             [0,-1,-6,-1,-1],
             [-3,-6,0,0,0],
@@ -176,63 +142,161 @@ def corners(image):
     
     return corners
 
+def display_image(image):
+    # Display
+    cv2.imshow("blurp", image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()    
 
-
-
-# Rectangle finder
-#image = salt_n_pepper(img,.1)
-#image = blur(image, 2, 1)
-
-#image = rectangles(img)
-
-
-c = corners(img)
-image = img
-print c
-
-print c['top_left'][0:3]
-print c['bottom_left'][0:3]
-print c['top_right'][0:3]
-print c['bottom_right'][0:3]
-
-
-rects = {}
-for tl in c['top_left']:
+def poss_corner_right(point, pts_below):
+    ''' finds a possible corner below the point'''
     
-    # Possible Bottom Lefts
-    poss_bl = []
-    for bl in c['bottom_left']:
+    # Sorts inplace by first parameter in inner list
+    pts_below.sort(key=lambda x: x[0])
+    
+    # Searches for the closest point below
+    for pp in pts_below:
+        if pp[0] <= point[0]+1 and pp[0] >= point[0]-1:
+            return pp
+
+def poss_corner_below(point, pts_below):
+    ''' finds a possible corner below the point'''
+    
+    # Sorts inplace by first parameter in inner list
+    pts_below.sort(key=lambda x: x[1])
+    
+    # Searches for the closest point below
+    for pp in pts_below:
+        if pp[1] <= point[1]+1 and pp[1] >= point[1]-1:
+            return pp
+    
+def find_rectangle(pt, point_dict):
+    ''' finds a rectangle given a top_left point'''
+    
+    rectangle = {}
+    
+    rectangle["top_left"] = pt
+    rectangle["bottom_left"] = poss_corner_below(pt, point_dict["bottom_left"])
+    rectangle["top_right"] = poss_corner_right(pt, point_dict["top_right"])
+    rectangle["bottom_right"] = poss_corner_below(rectangle["top_right"], point_dict["bottom_right"])
+    
+    return rectangle
+    
+
+def draw_rectangle(image, rect):
+    cv2.line(image, tuple(rect["top_left"]), tuple(rect["top_right"]), (0,255,0), 1)
+    cv2.line(image, tuple(rect["top_left"]), tuple(rect["bottom_left"]), (0,255,0), 1)
+    cv2.line(image, tuple(rect["top_right"]), tuple(rect["bottom_right"]), (0,255,0), 1)
+    cv2.line(image, tuple(rect["bottom_left"]), tuple(rect["bottom_right"]), (0,255,0), 1)
+
+    
+if __name__== "__main__":    
+    
+    # images
+    #img = cv2.imread('../images/rectangles.jpg')
+    #img = cv2.imread('../images/rectangles2.jpg')
+    #img = cv2.imread('../images/ovechkin-skillscomp.jpg')
+    #img = cv2.imread('../images/skyscrapers.jpg')
+    #img = cv2.imread('../images/checkerboard.jpg')
+    #img = cv2.imread('../images/squareb.jpg')
+    #img = cv2.imread('../images/squarew.jpg') 
+    img = cv2.imread('../images/sq.jpg')  
+       
+    img = salt_n_pepper(img,.03)
+    #img = blur(img, 2, 1)
+    img = rectangles(img)
+    
+    
+    c = corners(img)
+
+    rects = []
+    count = 0
+    for tl in c["top_left"]:
+        r =  find_rectangle(tl, c)
         
-        # if the bottom left col value is +- 3 away from top left
-        if bl[1] < tl[1]+3 and bl[1] > tl[1]-3:
-            poss_bl.append(bl)
+        print r
+        draw_rectangle(img, r)
+        
+        #if count == 10:        
+            #break
+        #count = count + 1
+
+    display_image(img)
+    
+   
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    #print c['top_left'][0:3]
+    #print c['bottom_left'][0:3]
+    #print c['top_right'][0:3]
+    #print c['bottom_right'][0:3]
+    
+    
+    #rects = {}
+    #for tl in c['top_left']:
+        
+        ## Possible Bottom Lefts
+        #poss_bl = []
+        #for bl in c['bottom_left']:
             
+            ## if the bottom left col value is +- 3 away from top left
+            #if bl[1] < tl[1]+3 and bl[1] > tl[1]-3:
+                #poss_bl.append(bl)
+                
+        
+        ## Sorts the list of list on the first value of inner list
+        #poss_bl.sort(key=lambda x: x[0])
+        
+        ## Finds all of the other points possible corners in the local area
+        #minimum = poss_bl[0][0]
+        #for bl in poss_bl:
+            #if not(bl[0] >= minimum and bl[0] <= 6):
+                #poss_bl.remove(bl)
+        
+        ## Finding all of the possible bottom lefts for this rectangle
+        
+        
+        ## TODO
+        ## Need to find minimum row value and then add trim all the ones that are not +-3 from this value
+        ## This basically gets all of the possible bottom lefts directly below this top left
+        ##
+        ## Next Do this with the top Rights in the same fashion 
+        ## Finally From all of your top rights and bottom lefts find your bottom rights
+        ## 
+        ## Might want to create a function that finds all of the possible points above, below, left, or right of a given point
+        ##
+        ## Once you have all of the possible points for this rectangle, draw them...
+        
+        
+        #rects[tuple(tl)] = {'poss_bl':poss_bl}
+        
+        
+        
+        
+        ## Possible Top Rights
     
-    # Finding all of the possible bottom lefts for this rectangle
-    # TODO
-    # Need to find minimum row value and then add trim all the ones that are not +-3 from this value
-    # This basically gets all of the possible bottom lefts directly below this top left
-    #
-    # Next Do this with the top Rights in the same fashion 
-    # Finally From all of your top rights and bottom lefts find your bottom rights
-    # 
-    # Might want to create a function that finds all of the possible points above, below, left, or right of a given point
-    #
-    # Once you have all of the possible points for this rectangle, draw them...
     
+        
+    #print rects
     
-    rects[tuple(tl)] = {'poss_bl':poss_bl}
-    
-    
-    
-    
-    # Possible Top Rights
-
-
-    
-print rects
-
-# Display
-cv2.imshow("blurp", image)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
