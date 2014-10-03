@@ -3,6 +3,7 @@ import numpy as np
 from random import randint
 
 
+
 # Kernel matrixes
 #---------------------------------------------------
 top_l =  [[0,0,-3,-1,0],
@@ -124,21 +125,40 @@ def get_whites(img):
         
     return nums
 
-def threshold_image(img):
-    ret,img = cv2.threshold(img,127,255,cv2.THRESH_BINARY)
+def threshold_image(img, inverse=False):
+    if (not(inverse)):
+        ret,img = cv2.threshold(img,127,255,cv2.THRESH_BINARY)
+    else:
+        ret,img = cv2.threshold(img,127,255,cv2.THRESH_BINARY_INV)
     return img
 
 def corners(image):
     '''Returns a dictionary of possible 4 corners of a rectangle'''
+    image = threshold_image(image)
+    #image_inverse = threshold_image(image, True)
+    
     corners = {}
-    image1 = corner(img, 1, b_l)
+    image1 = corner(image, 1, b_l)
+   # image1_i = corner(image, 1, b_l)
     corners['bottom_left'] = get_whites(threshold_image(image1))
+    #corners['bottom_left'][0:0] = get_whites(threshold_image(image1_i))
+    
     image2 = corner(img, 1, b_r)
+    #image2_i = corner(image, 1, b_l)
     corners['bottom_right'] = get_whites(threshold_image(image2))
+    #corners['bottom_right'][0:0] = get_whites(threshold_image(image2_i))
+    
+    
     image3 = corner(img, 1, t_l)
+    #image3_i = corner(image, 1, b_l)
     corners['top_left'] = get_whites(threshold_image(image3))
+    #corners['top_left'][0:0] = get_whites(threshold_image(image3_i))
+    
+
     image4 = corner(img, 1, t_r)    
+    #image4_i = corner(image, 1, b_l)
     corners['top_right'] = get_whites(threshold_image(image4))
+    #corners['top_right'][0:0] = get_whites(threshold_image(image4_i))
     
     return corners
 
@@ -150,24 +170,28 @@ def display_image(image):
 
 def poss_corner_right(point, pts_below):
     ''' finds a possible corner below the point'''
+    if point == None:
+            return None    
     
     # Sorts inplace by first parameter in inner list
     pts_below.sort(key=lambda x: x[0])
     
     # Searches for the closest point below
     for pp in pts_below:
-        if pp[0] <= point[0]+1 and pp[0] >= point[0]-1:
+        if pp[0] <= point[0]+1 and pp[0] >= point[0]-1 and point[1] < pp[1]:
             return pp
 
 def poss_corner_below(point, pts_below):
     ''' finds a possible corner below the point'''
+    if point == None:
+        return None
     
     # Sorts inplace by first parameter in inner list
     pts_below.sort(key=lambda x: x[1])
     
     # Searches for the closest point below
     for pp in pts_below:
-        if pp[1] <= point[1]+1 and pp[1] >= point[1]-1:
+        if pp[1] <= point[1]+1 and pp[1] >= point[1]-1 and point[0] < pp[0]:
             return pp
     
 def find_rectangle(pt, point_dict):
@@ -175,20 +199,42 @@ def find_rectangle(pt, point_dict):
     
     rectangle = {}
     
+
+    
     rectangle["top_left"] = pt
     rectangle["bottom_left"] = poss_corner_below(pt, point_dict["bottom_left"])
-    rectangle["top_right"] = poss_corner_right(pt, point_dict["top_right"])
+    rectangle["top_right"] = poss_corner_right(pt, point_dict["top_right"])      
     rectangle["bottom_right"] = poss_corner_below(rectangle["top_right"], point_dict["bottom_right"])
     
-    return rectangle
+    for c in rectangle:
+        if rectangle[c] == None:
+            return None, point_dict
+    
+    # Removal from list
+    point_dict["bottom_left"].remove(rectangle["bottom_left"])
+    point_dict["bottom_right"].remove(rectangle["bottom_right"])
+    point_dict["top_right"].remove(rectangle["top_right"])
+    
+    
+    
+    return rectangle, point_dict
     
 
 def draw_rectangle(image, rect):
+    rect = flip_xy(rect)
+    
     cv2.line(image, tuple(rect["top_left"]), tuple(rect["top_right"]), (0,255,0), 1)
     cv2.line(image, tuple(rect["top_left"]), tuple(rect["bottom_left"]), (0,255,0), 1)
     cv2.line(image, tuple(rect["top_right"]), tuple(rect["bottom_right"]), (0,255,0), 1)
     cv2.line(image, tuple(rect["bottom_left"]), tuple(rect["bottom_right"]), (0,255,0), 1)
-
+    
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    cv2.putText(image,"hello", tuple(rect["bottom_left"]), font, .2, (0,255,0))    
+    
+def flip_xy(rect):
+    for key in rect:
+        rect[key] = (rect[key][1],rect[key][0])
+    return rect
     
 if __name__== "__main__":    
     
@@ -198,30 +244,53 @@ if __name__== "__main__":
     #img = cv2.imread('../images/ovechkin-skillscomp.jpg')
     #img = cv2.imread('../images/skyscrapers.jpg')
     #img = cv2.imread('../images/checkerboard.jpg')
+    #img = cv2.imread('../images/checkerboard2.jpg')
     #img = cv2.imread('../images/squareb.jpg')
     #img = cv2.imread('../images/squarew.jpg') 
     img = cv2.imread('../images/sq.jpg')  
        
-    img = salt_n_pepper(img,.03)
+    #img = salt_n_pepper(img,.03)
     #img = blur(img, 2, 1)
-    img = rectangles(img)
+    #img = rectangles(img)
     
     
     c = corners(img)
+    #img = corner(img, 1, b_r)
+    img = rectangles(img)
 
     rects = []
     count = 0
+    
+    d = c
+    print c
+    
+    c["top_left"].sort(key=lambda x: x[1])
+    
+    
+    rects = []
     for tl in c["top_left"]:
-        r =  find_rectangle(tl, c)
+        r, d =  find_rectangle(tl, d)
+
         
-        print r
+        if not(r == None):
+            rects.append(r)
+
+
+    print len(rects)
+    for r in rects:
         draw_rectangle(img, r)
         
-        #if count == 10:        
-            #break
-        #count = count + 1
+        #if count == 15:
+            #display_image(img)
+            ##break
+        #count = count + 1 
+        
+    
+    print count
 
     display_image(img)
+    
+    
     
    
     
