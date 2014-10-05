@@ -1,6 +1,8 @@
 import cv2
 import numpy as np
 from random import randint
+from matplotlib import pyplot as plt
+
 
 
 
@@ -31,11 +33,29 @@ bottom_r =     [[0,1,0,-1,0],
             [-1,-1,-6,-1,0],
             [0,-1,-3,0,0]]
 
+#degree_30 = [[0, 0, 0, 0, 0, -1, -1],
+             #[0, 0, 0, 0, -1, -1, 0],
+             #[0, 0, -3, -1, -1, 0, 1],
+             #[0, 0, -6, 0, 0, 1, 1],
+             #[0, -1, 0, 0, 0, 0, 0],
+             #[0, -1, -6, -1, -1, -1, -1],
+             #[0, 0, 0, -3, -1, 0, 0]]
+
+degree_30 = [    [0,	0,	0,	0,	0,	-1,	-1],
+    [0,	0,	0,	-1,	-1,	-1,	0],
+    [0,	-3,	-1,	-1,	0,	0,	1],
+    [-1,	-6,	0,	0,	1,	1,	1],
+    [-1,	0,	0,	0,	0,	0,	0],
+    [-1,	-6,	-1,	-1,	-1,	-1,	-1],
+    [0,	0,	-3,	-1,	0,	0,	0]
+]
+
 
 #---------------------------------------------------
 def gen_kernal(m_list):
-    '''From a list of lists returns a kernal 5x5'''
-    matrix = np.zeros((5,5))
+    '''From a list of lists returns a kernal'''
+   
+    matrix = np.zeros((len(m_list),len(m_list[0])))
     for row,l in enumerate(m_list):
         for col,num in enumerate(l):
             matrix[row,col] = num
@@ -47,6 +67,7 @@ t_l = gen_kernal(top_l)
 t_r = gen_kernal(top_r)
 b_l = gen_kernal(bottom_l)
 b_r = gen_kernal(bottom_r)
+d_30 = gen_kernal(degree_30)
 
 #---------------------------------------------------
 def corner(image, times, kernel):
@@ -245,6 +266,7 @@ def flip_xy(rect):
     return rect
 
 def all_rectangles(img):
+    '''Gets all of the rectangles from a set of points'''
     c = corners(img)
     rects = []    
     
@@ -268,6 +290,17 @@ def draw_all_rectangles(img, rects):
         draw_rectangle(img, r, i)
     display_image(img)    
         
+def detect_rectangels(img):
+    r = all_rectangles(img)
+    img_i = threshold_image(img, inverse=True)
+    r[0:0] = all_rectangles(img_i)
+    draw_all_rectangles(img, r)
+
+def detect_30_degrees(img):
+    img = threshold_image(img)
+    img = corner(img, 1, d_30)
+    display_image(img)    
+        
 if __name__== "__main__":    
     
     # images
@@ -276,13 +309,17 @@ if __name__== "__main__":
     #img = cv2.imread('../images/ovechkin-skillscomp.jpg')
     #img = cv2.imread('../images/skyscrapers.jpg')
     #img = cv2.imread('../images/checkerboard.jpg')
-    img = cv2.imread('../images/checkerboard2.jpg')
+    #img = cv2.imread('../images/checkerboard2.jpg')
     #img = cv2.imread('../images/squareb.jpg')
     #img = cv2.imread('../images/squarew.jpg') 
     #img = cv2.imread('../images/sq.jpg')  
     #img = cv2.imread('../images/checkbb.jpg')
     #img = cv2.imread('../images/planner.jpg')
     #img = cv2.imread('../images/redcheck.jpg')
+    #img = cv2.imread('../images/triangle30.jpg')
+    #img = cv2.imread('../images/angle30.jpg')
+    img = cv2.imread('../images/dark.jpg')
+    
     
     
        
@@ -293,16 +330,10 @@ if __name__== "__main__":
     #img = rectangles(img)
     
     
-    r = all_rectangles(img)
-    img_i = threshold_image(img, inverse=True)
     
-    r[0:0] = all_rectangles(img_i)
 
-    img = threshold_image(img)
-    img_i = corner(img_i, 1, b_r)
-    #display_image(all_corners(img_i))
-    #display_image(img_i)
     
-    draw_all_rectangles(img, r)
+   
+    
 
     
