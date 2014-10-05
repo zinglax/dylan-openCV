@@ -290,16 +290,33 @@ def draw_all_rectangles(img, rects):
         draw_rectangle(img, r, i)
     display_image(img)    
         
-def detect_rectangels(img):
+def detect_rectangles(img):
+    ''' Detects, draws, and then desplays all of the rectangles found in an image'''
     r = all_rectangles(img)
     img_i = threshold_image(img, inverse=True)
     r[0:0] = all_rectangles(img_i)
     draw_all_rectangles(img, r)
 
 def detect_30_degrees(img):
+    ''' Detects all 30 degree, dispalys image with white area where 30 degree angle is'''
     img = threshold_image(img)
     img = corner(img, 1, d_30)
     display_image(img)    
+        
+def hist_equalization(img):  
+    ''' Preforms histogram equalization on an image '''
+    ''' code taken from:  http://docs.opencv.org/master/doc/py_tutorials/py_imgproc/py_histograms/py_histogram_equalization/py_histogram_equalization.html'''
+    
+    hist,bins = np.histogram(img.flatten(),256,[0,256])
+        
+    cdf = hist.cumsum()
+    cdf_m = np.ma.masked_equal(cdf,0)
+    cdf_m = (cdf_m - cdf_m.min())*255/(cdf_m.max()-cdf_m.min())
+    cdf = np.ma.filled(cdf_m,0).astype('uint8')    
+    img2 = cdf[img]
+    
+    display_image(img)    
+    display_image(img2)    
         
 if __name__== "__main__":    
     
@@ -307,7 +324,7 @@ if __name__== "__main__":
     #img = cv2.imread('../images/rectangles.jpg')
     #img = cv2.imread('../images/rectangles2.jpg')
     #img = cv2.imread('../images/ovechkin-skillscomp.jpg')
-    #img = cv2.imread('../images/skyscrapers.jpg')
+    img = cv2.imread('../images/skyscrapers.jpg')
     #img = cv2.imread('../images/checkerboard.jpg')
     #img = cv2.imread('../images/checkerboard2.jpg')
     #img = cv2.imread('../images/squareb.jpg')
@@ -319,9 +336,12 @@ if __name__== "__main__":
     #img = cv2.imread('../images/triangle30.jpg')
     #img = cv2.imread('../images/angle30.jpg')
     img = cv2.imread('../images/dark.jpg')
+    #img = cv2.imread('../images/building.jpg')
     
     
     
+    
+    detect_rectangles(img)
        
     #img = salt_n_pepper(img,3)
     #img = blur(img, 5, 2)
