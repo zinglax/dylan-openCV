@@ -3,9 +3,6 @@ import numpy as np
 from random import randint
 from matplotlib import pyplot as plt
 
-
-
-
 # Kernel matrixes
 #---------------------------------------------------
 top_l =  [[0,0,-3,-1,0],
@@ -33,13 +30,7 @@ bottom_r =     [[0,1,0,-1,0],
             [-1,-1,-6,-1,0],
             [0,-1,-3,0,0]]
 
-#degree_30 = [[0, 0, 0, 0, 0, -1, -1],
-             #[0, 0, 0, 0, -1, -1, 0],
-             #[0, 0, -3, -1, -1, 0, 1],
-             #[0, 0, -6, 0, 0, 1, 1],
-             #[0, -1, 0, 0, 0, 0, 0],
-             #[0, -1, -6, -1, -1, -1, -1],
-             #[0, 0, 0, -3, -1, 0, 0]]
+
 
 degree_30 = [    [0,	0,	0,	0,	0,	-1,	-1],
     [0,	0,	0,	-1,	-1,	-1,	0],
@@ -49,7 +40,6 @@ degree_30 = [    [0,	0,	0,	0,	0,	-1,	-1],
     [-1,	-6,	-1,	-1,	-1,	-1,	-1],
     [0,	0,	-3,	-1,	0,	0,	0]
 ]
-
 
 #---------------------------------------------------
 def gen_kernal(m_list):
@@ -196,7 +186,7 @@ def display_image(image):
     cv2.waitKey(0)
     cv2.destroyAllWindows()    
 
-def poss_corner_right(point, pts_below):
+def poss_corner_right(point, pts_below, dof=3):
     ''' finds a possible corner below the point'''
     if point == None:
             return None    
@@ -206,10 +196,10 @@ def poss_corner_right(point, pts_below):
     
     # Searches for the closest point below
     for pp in pts_below:
-        if pp[0] <= point[0]+1 and pp[0] >= point[0]-1 and point[1] < pp[1]:
+        if pp[0] <= point[0]+dof and pp[0] >= point[0]-dof and point[1] < pp[1]:
             return pp
 
-def poss_corner_below(point, pts_below):
+def poss_corner_below(point, pts_below, dof=3):
     ''' finds a possible corner below the point'''
     if point == None:
         return None
@@ -219,13 +209,14 @@ def poss_corner_below(point, pts_below):
     
     # Searches for the closest point below
     for pp in pts_below:
-        if pp[1] <= point[1]+1 and pp[1] >= point[1]-1 and point[0] < pp[0]:
+        if pp[1] <= point[1]+dof and pp[1] >= point[1]-dof and point[0] < pp[0]:
             return pp
     
 def find_rectangle(pt, point_dict):
     ''' finds a rectangle given a top_left point'''
     
     rectangle = {}
+    
 
     rectangle["top_left"] = pt
     rectangle["bottom_left"] = poss_corner_below(pt, point_dict["bottom_left"])
@@ -265,6 +256,21 @@ def flip_xy(rect):
         rect[key] = (rect[key][1],rect[key][0])
     return rect
 
+def check_rectangularity(rect,dof=1):
+    rect["top_left"]
+    rect["top_right"]
+    rect["bottom_left"]
+    rect["bottom_right"]
+    
+    if (rect["top_right"][0] <= rect["top_left"][0] + dof) and (rect["top_right"][0] >= rect["top_left"][0] - dof):
+        if (rect["bottom_left"][1] <= rect["top_left"][1] + dof) and (rect["bottom_left"][1] >= rect["top_left"][1] - dof):
+            if (rect["bottom_right"][0] <= rect["bottom_left"][0] + dof) and (rect["bottom_right"][0] >= rect["bottom_left"][0] - dof): 
+                if (rect["bottom_right"][1] <= rect["top_right"][1] + dof) and (rect["bottom_right"][1] >= rect["top_right"][1] - dof):
+                    return True
+                
+    return False
+    
+
 def all_rectangles(img):
     '''Gets all of the rectangles from a set of points'''
     c = corners(img)
@@ -279,7 +285,10 @@ def all_rectangles(img):
 
         
         if not(r == None):
-            rects.append(r)
+            if check_rectangularity(r):
+                rects.append(r)
+            
+        
 
     print len(rects)
     return rects
@@ -288,20 +297,20 @@ def draw_all_rectangles(img, rects):
     ''' Draws all of the rectangles to the image'''
     for i,r in enumerate(rects):
         draw_rectangle(img, r, i)
-    display_image(img)    
+    return img
         
 def detect_rectangles(img):
     ''' Detects, draws, and then desplays all of the rectangles found in an image'''
     r = all_rectangles(img)
     img_i = threshold_image(img, inverse=True)
     r[0:0] = all_rectangles(img_i)
-    draw_all_rectangles(img, r)
+    return draw_all_rectangles(img, r)
 
 def detect_30_degrees(img):
     ''' Detects all 30 degree, dispalys image with white area where 30 degree angle is'''
-    img = threshold_image(img)
-    img = corner(img, 1, d_30)
-    display_image(img)    
+    img2 = threshold_image(img)
+    img2 = corner(img2, 1, d_30)
+    return img2   
         
 def hist_equalization(img):  
     ''' Preforms histogram equalization on an image '''
@@ -315,8 +324,7 @@ def hist_equalization(img):
     cdf = np.ma.filled(cdf_m,0).astype('uint8')    
     img2 = cdf[img]
     
-    display_image(img)    
-    display_image(img2)    
+    return img2    
         
 if __name__== "__main__":    
     
@@ -324,7 +332,7 @@ if __name__== "__main__":
     #img = cv2.imread('../images/rectangles.jpg')
     #img = cv2.imread('../images/rectangles2.jpg')
     #img = cv2.imread('../images/ovechkin-skillscomp.jpg')
-    img = cv2.imread('../images/skyscrapers.jpg')
+    #img = cv2.imread('../images/skyscrapers.jpg')
     #img = cv2.imread('../images/checkerboard.jpg')
     #img = cv2.imread('../images/checkerboard2.jpg')
     #img = cv2.imread('../images/squareb.jpg')
@@ -335,17 +343,18 @@ if __name__== "__main__":
     #img = cv2.imread('../images/redcheck.jpg')
     #img = cv2.imread('../images/triangle30.jpg')
     #img = cv2.imread('../images/angle30.jpg')
-    img = cv2.imread('../images/dark.jpg')
-    #img = cv2.imread('../images/building.jpg')
+    #img = cv2.imread('../images/dark.jpg')
+    img = cv2.imread('../images/building.jpg')
     
     
+    #img = cv2.medianBlur(img,1)
     
     
     detect_rectangles(img)
        
     #img = salt_n_pepper(img,3)
     #img = blur(img, 5, 2)
-    #img = cv2.medianBlur(img,7)
+    
     
     #img = rectangles(img)
     
